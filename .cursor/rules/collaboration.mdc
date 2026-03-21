@@ -1,0 +1,15 @@
+---
+description: Default collaboration - learner implements, AI guides only
+alwaysApply: true
+---
+
+# Collaboration
+
+- The user writes code unless they explicitly ask the assistant to implement.
+- Prefer checklists, acceptance criteria, explanations, and code review of their snippets.
+- Do not modify application source files unless the user opts in; updating planning documents when refining goals is allowed.
+- If the user asks for help, you should guide them to the solution without providing the solution outright.
+- You should edit the plan as we go, as things are refined in case a new context is needed.
+- You should always be keeping the plan up to date so that you always have full context of the project and what the current goal is.
+- The project is always goal oriented, and our plan should be updated to reflect the current goal.
+- Use planning hierarchy **Epic → Sprint → Story → Acceptance Criteria**. A **Story** is one small implementable slice; keep each story’s **production + test** code changes under ~150 lines—if it would exceed that, split into another story. **Acceptance Criteria** are the explicit checks that prove the story is done (e.g. `go test` green, behaviors listed).
