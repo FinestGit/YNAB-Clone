@@ -97,61 +97,69 @@ Maintain one **Epic**, break work into **Sprints** (themes). Each sprint below l
 
 **Sprint goal:** `internal/budget` models + pure functions + tests; **no** `net/http`, **no** SQL/driver imports in this package.
 
-#### Story S1-01 — `Money` (signed cents)
+#### Story S1-01 — `Money` + `Add` (signed cents)
 
-- **AC:** Type represents signed cents; helpers or methods for add/subtract (or clear rules for operators) without float conversion.
-- **AC:** Tests cover at least: zero, positive, negative, and one overflow/underflow or “bounded op returns error” case (choose one policy and test it).
-- **AC:** `go test ./internal/budget/...` passes; story diff stays **<~150 LOC** (prod + tests).
+- **AC:** `Money` type + `NewMoney` / `Cents`; **`Add`** uses integer cents only (no floats).
+- **AC:** `Add` returns `error` on `int64` overflow/underflow (sentinel errors OK).
+- **AC:** Tests for **`Add` only**: zero, positive/negative mixes, overflow and underflow.
+- **AC:** `go test ./internal/budget/...` passes; story **<~150 LOC** (prod + tests) or split further.
 
-#### Story S1-02 — Strong IDs (no primitive obsession)
+#### Story S1-02 — `Money.Sub` (subtract, same safety rules)
+
+- **AC:** `Sub(other Money) (Money, error)` subtracts without silent wraparound; **same error policy** as `Add`.
+- **AC:** If implemented via `Add` and negation, **`Negate` (or equivalent) must error** on `math.MinInt64` (no representable positive counterpart); or use explicit bounds checks in `Sub`—document which.
+- **AC:** Tests: typical cases + at least one overflow/underflow-style error path analogous to `Add`.
+- **AC:** `go test ./internal/budget/...` passes; **<~150 LOC** for this story only.
+
+#### Story S1-03 — Strong IDs (no primitive obsession)
 
 - **AC:** Distinct types for `AccountID`, `CategoryID`, `TransactionID` (or equivalent) so signatures don’t mix raw strings accidentally.
 - **AC:** Tests prove distinct types don’t assign across each other at compile time (or document pattern if you use typed structs only).
 - **AC:** `go test ./internal/budget/...` passes; **<~150 LOC**.
 
-#### Story S1-03 — `Account` aggregate (minimal)
+#### Story S1-04 — `Account` aggregate (minimal)
 
 - **AC:** `Account` holds at least: `ID`, `Name`, `BalanceCents` (or your chosen single balance field for MVP).
 - **AC:** Constructor/factory validates `Name` non-empty (and any other invariants you declare).
 - **AC:** Tests for valid create + validation failure path(s); **<~150 LOC**.
 
-#### Story S1-04 — `Category` aggregate (minimal)
+#### Story S1-05 — `Category` aggregate (minimal)
 
 - **AC:** `Category` holds at least: `ID`, `Name`.
 - **AC:** Validation on `Name` (and any other declared invariants).
 - **AC:** Tests for valid create + validation failure; **<~150 LOC**.
 
-#### Story S1-05 — `Transaction` + posting to **account** balance
+#### Story S1-06 — `Transaction` + posting to **account** balance
 
 - **AC:** `Transaction` includes at least: `ID`, `AccountID`, optional `CategoryID`, signed `AmountCents`, `Date` (type of your choice), `Payee` (string OK).
 - **AC:** Pure function `ApplyTransactionToAccount(a Account, t Transaction) (Account, error)` updates **account** balance by signed amount; rejects invalid combo (define at least one rule, e.g. zero amount invalid).
 - **AC:** Tests: inflow increases balance, outflow decreases, error cases; **<~150 LOC**.
 
-#### Story S1-06 — Monthly assignment + category **activity**
+#### Story S1-07 — Monthly assignment + category **activity**
 
 - **AC:** Pure function computes **activity cents** for a category/month from a slice of transactions (filter by `CategoryID` + month).
 - **AC:** Tests include transactions outside month excluded; uncategorized transactions excluded from category activity.
 - **AC:** **<~150 LOC**.
 
-#### Story S1-07 — `BudgetLine` + **available** helper
+#### Story S1-08 — `BudgetLine` + **available** helper
 
 - **AC:** Type or struct represents per `(CategoryID, Month)` values: `BudgetedCents` plus computed `ActivityCents` input → `AvailableCents` via shared convention above.
 - **AC:** Tests: budgeted 100_00, activity -30_00 → available 70_00 (adjust signs if you invert convention—tests must match your rule).
 - **AC:** **<~150 LOC**.
 
-#### Story S1-08 — **Allocate** (increase budgeted)
+#### Story S1-09 — **Allocate** (increase budgeted)
 
 - **AC:** Pure function `Allocate(line BudgetLine, amountCents int64) (BudgetLine, error)` (names flexible) increases `BudgetedCents`; rejects negative/zero per your policy.
 - **AC:** Tests: successful allocate + at least one invalid input error.
 - **AC:** **<~150 LOC**.
 
-#### Story S1-09 — Multi-transaction consistency (light integration in tests)
+#### Story S1-10 — Multi-transaction consistency (light integration in tests)
 
 - **AC:** One test (or small group) builds 2–3 transactions across categories/month edge and asserts correct **activity** and **available** when combined with a budget line.
 - **AC:** No new imports beyond stdlib + `internal/budget` test package patterns you already use.
-- **AC:** **<~150 LOC** (split into S1-10 if needed).
+- **AC:** **<~150 LOC** (split into S1-11 if needed).
 
-#### Story S1-10 — Table-driven regression tests (optional split)
+#### Story S1-11 — Table-driven regression tests (optional split)
 
 - **AC:** Table of ≥5 rows covering tricky cases (month boundary, negative activity, zero budgeted, large cents).
 - **AC:** Each row comment or name documents the rule it locks in.
