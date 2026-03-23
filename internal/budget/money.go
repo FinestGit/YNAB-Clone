@@ -27,3 +27,13 @@ func (money Money) Add(rightSide Money) (Money, error) {
 	}
 	return Money(rightSide.Cents() + money.Cents()), nil
 }
+
+func (money Money) Sub(rightSide Money) (Money, error) {
+	if rightSide.Cents() < 0 && money.Cents() > math.MaxInt64+rightSide.Cents() {
+		return 0, ErrMoneyOverflow
+	}
+	if rightSide.Cents() > 0 && money.Cents() < math.MinInt64+rightSide.Cents() {
+		return 0, ErrMoneyUnderflow
+	}
+	return Money(money.Cents() - rightSide.Cents()), nil
+}
