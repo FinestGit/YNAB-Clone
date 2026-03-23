@@ -19,6 +19,6 @@ func NewCategory(id CategoryID, name string) (Category, error) {
 	}
 	return Category{
 		ID:   CategoryID(id),
-		Name: name,
+		Name: categoryName,
 	}, nil
 }
